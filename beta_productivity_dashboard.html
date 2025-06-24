@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Productivity Dashboard - Week 0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .beta-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .week-info {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .energy-control {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .energy-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            margin: 15px 0;
+            -webkit-appearance: none;
+        }
+        
+        .energy-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .energy-level {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .task-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .task-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .task-item.prep {
+            border-left-color: #8b5cf6;
+            background: #faf5ff;
+        }
+        
+        .task-item.habit-current {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .task-item.habit-new {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .task-item.maintenance {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .task-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        
+        .task-item.hidden {
+            display: none;
+        }
+        
+        .task-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .task-meta {
+            font-size: 0.85em;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .energy-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .energy-1, .energy-2 { background: #dcfce7; color: #166534; }
+        .energy-3, .energy-4 { background: #fef3c7; color: #92400e; }
+        .energy-5 { background: #fed7d7; color: #991b1b; }
+        
+        .completion-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .completion-checkbox:hover {
+            border-color: #10b981;
+        }
+        
+        .completion-checkbox.checked {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        
+        .completion-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            top: -2px;
+            left: 2px;
+        }
+        
+        .stats-bar {
+            background: #f3f4f6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        
+        .launch-countdown {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .countdown-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .github-setup {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .github-steps {
+            text-align: left;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        
+        .github-steps ol {
+            padding-left: 20px;
+        }
+        
+        .github-steps li {
+            margin: 10px 0;
+            padding: 5px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header, .content {
+                padding: 20px;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="beta-badge">BETA v0.1</div>
+            <div class="week-info" id="dateInfo">Week 0: Preparation Phase</div>
+            <h1>Personal Productivity Dashboard</h1>
+            
+            <div class="energy-control">
+                <label for="energySlider">Current Energy Level</label>
+                <input type="range" id="energySlider" class="energy-slider" min="1" max="10" value="7">
+                <div class="energy-level" id="energyLevel">7 - MEDIUM ENERGY 🟡</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="launch-countdown">
+                <div class="countdown-number" id="daysToLaunch">3</div>
+                <div>Days until Week 1 Launch (Monday)</div>
+                <div style="font-size: 0.9em; margin-top: 10px;">Time to set up your foundation!</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    🚀 Week 0: Preparation Tasks
+                </div>
+                <div class="task-grid" id="prepGrid">
+                    <div class="task-item prep" data-energy="3">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Set up Excel workbook with enhanced structure</div>
+                        <div class="task-meta">
+                            <span>Foundation • 1-2 hours</span>
+                            <span class="energy-badge energy-3">Energy: 3</span>
+                        </div>
+                    </div>
+                    <div class="task-item prep" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Complete habits audit (DOING vs START)</div>
+                        <div class="task-meta">
+                            <span>Foundation • 30 minutes</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item prep" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Create GitHub account and repository</div>
+                        <div class="task-meta">
+                            <span>Setup • 15 minutes</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item prep" data-energy="1">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Deploy this beta dashboard to GitHub Pages</div>
+                        <div class="task-meta">
+                            <span>Practice • 10 minutes</span>
+                            <span class="energy-badge energy-1">Energy: 1</span>
+                        </div>
+                    </div>
+                    <div class="task-item prep" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Review Week 1 plan and set Monday start time</div>
+                        <div class="task-meta">
+                            <span>Planning • 15 minutes</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    ✅ Current Habits (Already Doing)
+                </div>
+                <div class="task-grid" id="currentHabitsGrid">
+                    <div class="task-item habit-current" data-energy="3">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Weight loss tracking</div>
+                        <div class="task-meta">
+                            <span>MUST DO • Daily</span>
+                            <span class="energy-badge energy-3">Energy: 3</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-current" data-energy="4">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Running</div>
+                        <div class="task-meta">
+                            <span>MUST DO • 3x/week</span>
+                            <span class="energy-badge energy-4">Energy: 4</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-current" data-energy="3">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Cycling</div>
+                        <div class="task-meta">
+                            <span>NICE TO DO • 2x/week</span>
+                            <span class="energy-badge energy-3">Energy: 3</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-current" data-energy="3">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Cooking</div>
+                        <div class="task-meta">
+                            <span>MUST DO • Daily</span>
+                            <span class="energy-badge energy-3">Energy: 3</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-current" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">General cleaning</div>
+                        <div class="task-meta">
+                            <span>MUST DO • Daily</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    🎯 New Habits Starting Week 1
+                </div>
+                <div class="task-grid" id="newHabitsGrid">
+                    <div class="task-item habit-new" data-energy="2">
+                        <div class="task-name">Morning routine</div>
+                        <div class="task-meta">
+                            <span>MUST DO • Daily • Start Week 1</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-new" data-energy="2">
+                        <div class="task-name">Daily dishes</div>
+                        <div class="task-meta">
+                            <span>MUST DO • Daily • Start Week 1</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item habit-new" data-energy="3">
+                        <div class="task-name">Meditation</div>
+                        <div class="task-meta">
+                            <span>NICE TO DO • 3x/week • Start Week 1</span>
+                            <span class="energy-badge energy-3">Energy: 3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    🔧 Immediate Maintenance (Due Now)
+                </div>
+                <div class="task-grid" id="maintenanceGrid">
+                    <div class="task-item maintenance" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Oil change</div>
+                        <div class="task-meta">
+                            <span>Vehicle • 1 hour</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item maintenance" data-energy="2">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Clean fridge (deep)</div>
+                        <div class="task-meta">
+                            <span>Home • 30 min</span>
+                            <span class="energy-badge energy-2">Energy: 2</span>
+                        </div>
+                    </div>
+                    <div class="task-item maintenance" data-energy="1">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Clean dishwasher</div>
+                        <div class="task-meta">
+                            <span>Home • 15 min</span>
+                            <span class="energy-badge energy-1">Energy: 1</span>
+                        </div>
+                    </div>
+                    <div class="task-item maintenance" data-energy="1">
+                        <div class="completion-checkbox" onclick="toggleComplete(this)"></div>
+                        <div class="task-name">Change bathmat</div>
+                        <div class="task-meta">
+                            <span>Home • 5 min</span>
+                            <span class="energy-badge energy-1">Energy: 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="github-setup">
+                <h3>🐙 GitHub Setup Instructions</h3>
+                <div class="github-steps">
+                    <ol>
+                        <li><strong>Go to github.com</strong> and create your account</li>
+                        <li><strong>Create new repository:</strong> "personal-productivity-dashboard"</li>
+                        <li><strong>Make it public</strong> (required for free GitHub Pages)</li>
+                        <li><strong>Upload this file</strong> as "index.html"</li>
+                        <li><strong>Go to Settings → Pages</strong></li>
+                        <li><strong>Select "Deploy from a branch"</strong></li>
+                        <li><strong>Choose "main" branch</strong></li>
+                        <li><strong>Visit your live dashboard</strong> at: yourusername.github.io/personal-productivity-dashboard</li>
+                    </ol>
+                </div>
+                <p>🎉 <strong>Boom!</strong> You'll have your own productivity dashboard live on the web!</p>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number" id="tasksVisible">12</div>
+                    <div class="stat-label">Tasks Shown</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="tasksCompleted">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Active Habits</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Maintenance Due</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const energySlider = document.getElementById('energySlider');
+        const energyLevel = document.getElementById('energyLevel');
+        const tasksVisible = document.getElementById('tasksVisible');
+        const tasksCompleted = document.getElementById('tasksCompleted');
+        
+        // Calculate days until Monday
+        function updateCountdown() {
+            const today = new Date();
+            const nextMonday = new Date();
+            const daysUntilMonday = (1 + 7 - today.getDay()) % 7;
+            nextMonday.setDate(today.getDate() + (daysUntilMonday === 0 ? 7 : daysUntilMonday));
+            
+            const timeDiff = nextMonday.getTime() - today.getTime();
+            const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            document.getElementById('daysToLaunch').textContent = Math.max(0, daysLeft);
+        }
+        
+        function updateEnergyDisplay() {
+            const energy = parseInt(energySlider.value);
+            let status, emoji;
+            
+            if (energy >= 8) {
+                status = 'HIGH ENERGY';
+                emoji = '🟢';
+            } else if (energy >= 5) {
+                status = 'MEDIUM ENERGY';
+                emoji = '🟡';
+            } else {
+                status = 'LOW ENERGY';
+                emoji = '🔴';
+            }
+            
+            energyLevel.textContent = `${energy} - ${status} ${emoji}`;
+            filterTasks(energy);
+        }
+        
+        function filterTasks(currentEnergy) {
+            const allTasks = document.querySelectorAll('.task-item[data-energy]');
+            let visibleCount = 0;
+            
+            allTasks.forEach(task => {
+                const taskEnergy = parseInt(task.dataset.energy);
+                const shouldShow = currentEnergy >= taskEnergy;
+                
+                if (shouldShow) {
+                    task.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    task.classList.add('hidden');
+                }
+            });
+            
+            // Always show new habits (they don't have data-energy for filtering)
+            document.querySelectorAll('.habit-new').forEach(task => {
+                if (!task.dataset.energy) {
+                    visibleCount++;
+                }
+            });
+            
+            tasksVisible.textContent = visibleCount;
+        }
+        
+        function toggleComplete(checkbox) {
+            const taskItem = checkbox.closest('.task-item');
+            
+            if (checkbox.classList.contains('checked')) {
+                checkbox.classList.remove('checked');
+                taskItem.classList.remove('completed');
+            } else {
+                checkbox.classList.add('checked');
+                taskItem.classList.add('completed');
+            }
+            
+            updateCompletedCount();
+        }
+        
+        function updateCompletedCount() {
+            const completed = document.querySelectorAll('.completion-checkbox.checked').length;
+            tasksCompleted.textContent = completed;
+        }
+        
+        // Initialize
+        energySlider.addEventListener('input', updateEnergyDisplay);
+        updateEnergyDisplay();
+        updateCountdown();
+        
+        // Update countdown every hour
+        setInterval(updateCountdown, 3600000);
+        
+        // Save state to localStorage (remember, this is client-side only)
+        function saveState() {
+            const state = {
+                energy: energySlider.value,
+                completed: Array.from(document.querySelectorAll('.completion-checkbox.checked')).map(cb => 
+                    cb.closest('.task-item').querySelector('.task-name').textContent
+                )
+            };
+            localStorage.setItem('productivityDashboard', JSON.stringify(state));
+        }
+        
+        function loadState() {
+            const saved = localStorage.getItem('productivityDashboard');
+            if (saved) {
+                const state = JSON.parse(saved);
+                energySlider.value = state.energy || 7;
+                
+                // Restore completed tasks
+                state.completed?.forEach(taskName => {
+                    const taskItem = Array.from(document.querySelectorAll('.task-name'))
+                        .find(el => el.textContent === taskName)?.closest('.task-item');
+                    if (taskItem) {
+                        const checkbox = taskItem.querySelector('.completion-checkbox');
+                        if (checkbox) {
+                            checkbox.classList.add('checked');
+                            taskItem.classList.add('completed');
+                        }
+                    }
+                });
+                
+                updateEnergyDisplay();
+                updateCompletedCount();
+            }
+        }
+        
+        // Load state on page load
+        loadState();
+        
+        // Save state when things change
+        energySlider.addEventListener('change', saveState);
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('completion-checkbox')) {
+                setTimeout(saveState, 100); // Small delay to let the toggle complete
+            }
+        });
+    </script>
+</body>
+</html>
